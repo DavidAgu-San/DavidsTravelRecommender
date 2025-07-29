@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Travel Flight Offer Search</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<main class="max-w-3xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-8 text-center text-gray-900">Find Flight Offers</h1>
+
+  <form id="search-form" class="space-y-6" onsubmit="return false">
+    <div class="flex flex-col">
+      <label for="origin" class="mb-2 font-semibold text-gray-700">Origin (IATA code):</label>
+      <input id="origin" type="text" maxlength="3" required placeholder="e.g. JFK"
+        class="rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="des" class="mb-2 font-semibold text-gray-700">Destination (IATA code):</label>
+      <input id="des" type="text" maxlength="3" required placeholder="e.g. LAX"
+        class="rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="departureDate" class="mb-2 font-semibold text-gray-700">Departure Date:</label>
+      <input id="departureDate" type="date" required
+        class="rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="people" class="mb-2 font-semibold text-gray-700">People:</label>
+      <input id="people" type="number" min="1" value="1" required
+        class="rounded-md border border-gray-300 px-4 py-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="budget" class="mb-2 font-semibold text-gray-700">Budget (USD):</label>
+      <input id="budget" type="number" min="0" step="1" placeholder="Optional"
+        class="rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="maxResults" class="mb-2 font-semibold text-gray-700">Results to Show:</label>
+      <input id="maxResults" type="number" min="1" max="10" value="5"
+        class="rounded-md border border-gray-300 px-4 py-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <button id="submit" 
+      class="w-full bg-blue-600 text-white font-semibold py-3 rounded-md shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-4 focus:ring-blue-300">
+      Search Offers
+    </button>
+  </form>
+
+  <section id="results" class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></section>
+</main>
+</body>
+</html>

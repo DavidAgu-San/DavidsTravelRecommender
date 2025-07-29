@@ -1,3 +1,129 @@
+// Your API credentials
+const clientId = 'aC1cqvMId1NMyxALoq4qzaRsFQ4ddU8q';
+const clientSecret = 'hGWzKOQ1xVPwd05S';
+
+/**
+ * Retrieve Amadeus OAuth token
+ */
+async function getAmadeusToken(clientId, clientSecret) {
+  const res = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=client_credentials&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Auth failed: ${errText}`);
+  }
+  const data = await res.json();
+  return data.access_token;
+}
+
+/**
+ * Fetch Amadeus flight offers with given params
+ */
+async function getFlightOffers(token, params) {
+  const query = new URLSearchParams(params).toString();
+  const url = `https://test.api.amadeus.com/v2/shopping/flight-offers?${query}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`API Error: ${errText}`);
+  }
+  return res.json();
+}
+
+/**
+ * Show results or errors in UI
+ */
+function displayResults(data, budget) {
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '';
+
+  if (!data || !data.data || data.data.length === 0) {
+    resultsDiv.textContent = 'No flight offers found.';
+    return;
+  }
+
+  // Filter by budget if specified
+  let offers = data.data;
+  if (budget) {
+    offers = offers.filter(offer => parseFloat(offer.price.total) <= budget);
+  }
+  if (offers.length === 0) {
+    resultsDiv.textContent = 'No flight offers fit your budget.';
+    return;
+  }
+  // Format/display results
+  offers.forEach(offer => {
+    const div = document.createElement('div');
+    div.className = 'offer p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
+    const price = offer.price.total;
+    const currency = offer.price.currency;
+    let segmentsInfo = '';
+    offer.itineraries.forEach((itinerary, idx) => {
+      segmentsInfo += `<strong>Itinerary ${idx + 1}:</strong><br/>`;
+      itinerary.segments.forEach(seg => {
+        const dep = seg.departure;
+        const arr = seg.arrival;
+        segmentsInfo += `From ${dep.iataCode} at ${new Date(dep.at).toLocaleString()} -> To ${arr.iataCode} at ${new Date(arr.at).toLocaleString()}<br/>`;
+      });
+    });
+    div.innerHTML = `
+      <h3>Price: ${price} ${currency}</h3>
+      <p>${segmentsInfo}</p>
+    `;
+    resultsDiv.appendChild(div);
+  });
+}
+
+/**
+ * Wire up the form and handle API interaction
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById("search-form");
+  const resultsDiv = document.getElementById('results');
+
+  $("#submit").addEventListener('click', async (event) => {
+    event.preventDefault();
+    resultsDiv.textContent = 'Searching...';
+
+    // Collect form values
+    const origin = document.getElementById('origin').value.trim().toUpperCase();
+    const destination = document.getElementById('des').value.trim().toUpperCase();
+    const departureDate = document.getElementById('departureDate').value;
+    const people = parseInt(document.getElementById('people').value, 10);
+    const maxResults = parseInt(document.getElementById('maxResults').value, 10) || 5;
+    const budgetInput = document.getElementById('budget').value.trim();
+    const budget = budgetInput ? parseFloat(budgetInput) : null;
+
+    if (!origin || !destination || !departureDate || !people) {
+      resultsDiv.textContent = 'Please fill in all required fields.';
+      return;
+    }
+
+    try {
+      const token = await getAmadeusToken(clientId, clientSecret);
+
+      const params = {
+        originLocationCode: origin,
+        destinationLocationCode: destination,
+        departureDate: departureDate,
+        adults: people,
+        max: maxResults
+      };
+
+      // You could add more params (children, travelClass, etc.) if desired.
+      const data = await getFlightOffers(token, params);
+      displayResults(data, budget);
+
+    } catch (error) {
+      resultsDiv.textContent = 'Error: ' + error.message;
+      console.error(error);
+    }
+  });
+});
+
 (function () {
     const pagesData = [];
     let cities = [], isPopState = false, packages = [];
@@ -11,7 +137,7 @@
         const isPageDes = page.includes("des");
         const existPage = findPageIndex(page, isPageDes);
         page = page.includes("index") ? "home" : page;
-        if (existPage !== -1) {
+        if (existPage !== -1) {  
             renderCachedPage(page, isPageDes, existPage);
             return;
         }
@@ -103,7 +229,9 @@
             history.pushState({ "pages": page }, '', `/pages/${page}.html`);
         }
         if (page.includes("package")) {
-            setUpPackages();
+            setUpPackages();}
+        if (page === "survey") {
+            setUpSurveyPage();
         }
         isPopState = true;
         $("title").text(titleCase(page));
@@ -216,6 +344,49 @@
             packageBuilder(data.data);
         });
     }
+    function setUpSurveyPage() {
+        const form = document.getElementById("search-form");
+  const resultsDiv = document.getElementById('results');
+
+  $("#submit").click( async (event) => {
+    resultsDiv.textContent = 'Searching...';
+
+    // Collect form values
+    const origin = document.getElementById('origin').value.trim().toUpperCase();
+    const destination = document.getElementById('des').value.trim().toUpperCase();
+    const departureDate = document.getElementById('departureDate').value;
+    const people = parseInt(document.getElementById('people').value, 10);
+    const maxResults = parseInt(document.getElementById('maxResults').value, 10) || 5;
+    const budgetInput = document.getElementById('budget').value.trim();
+    const budget = budgetInput ? parseFloat(budgetInput) : null;
+
+    if (!origin || !destination || !departureDate || !people) {
+      resultsDiv.textContent = 'Please fill in all required fields.';
+      return;
+    }
+
+    try {
+      const token = await getAmadeusToken(clientId, clientSecret);
+
+      const params = {
+        originLocationCode: origin,
+        destinationLocationCode: destination,
+        departureDate: departureDate,
+        adults: people,
+        max: maxResults
+      };
+
+      // You could add more params (children, travelClass, etc.) if desired.
+      const data = await getFlightOffers(token, params);
+      displayResults(data, budget);
+
+    } catch (error) {
+      resultsDiv.textContent = 'Error: ' + error.message;
+      console.error(error);
+    }
+  });
+};
+    
     function packageBuilder(packages) {
         packages.forEach((item) => {
             let container = $("<div/>").addClass("bg-white rounded-xl p-3 shadow-sm border-gray-200 h-full flex flex-col justify-between items-center"),

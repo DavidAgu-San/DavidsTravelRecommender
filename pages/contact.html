@@ -1,17 +1,20 @@
-<section class="min-h-screen bg-[#0e2525] flex flex-col">
-    <img class="w-full h-48 sm:h-90 object-cover" src="/img/Flag.jpg" alt="Contact Banner">
-    <div class="relative flex-1 flex items-center justify-center">
-        <form class="bg-gray-200 rounded-lg w-full max-w-md mx-auto p-6 sm:p-20 flex flex-col items-center justify-center mt-6 shadow-lg">
-            <h1 class="text-3xl sm:text-6xl font-bold mb-4 text-center">Contact Us</h1>
-            <div class="flex flex-col sm:flex-row gap-4 mb-4 w-full">
-                <input type="text" placeholder="First Name" class="border p-2 w-full sm:w-1/2" />
-                <input type="text" placeholder="Last Name" class="border p-2 w-full sm:w-1/2" />
-            </div>
-            <input type="email" placeholder="Your Email" class="border p-2 mb-4 w-full">
-            <textarea placeholder="Your Message" class="border p-2 mb-4 w-full h-32"></textarea>
-            <button class="bg-primary text-white px-6 py-2 rounded w-full">Submit</button>
-        </form>
-    </div>
+<section id="S2"  class="flex flex-col xl:flex-col justify-center items-center sm:p-40 lg:p-65 bg-[#0E2525]/80   p-20">
+<p class=" text-2xl  text-white sm:text-sm lg:text-2xl xl:text-3xl  font-extrabold xl:pb-9">Contact Us</p>
+<form class=" min-w-[300px]  xl:min-w-[700px] grid gap-4 rounded-2xl p-12 bg-[#0E2525]/90  mx-auto">
+  <div class=" grid gap-2">
+    <label class="font-medium text-white text-lg" for="name">Name</label>
+    <input class="rounded-xl px-4 py-2 w-full bg-[#325858cc] text-white text-xl" type="text" id="name" name="name" />
+  </div>
+  <div class=" grid gap-2">
+    <label class="font-medium text-white text-lg" for="email">Email</label>
+    <input class="rounded-xl px-4 py-2 w-full bg-[#325858cc] text-white text-xl" type="email" id="email" name="email" />
+  </div>
+  <div class=" grid gap-2">
+    <label class="font-medium text-white text-lg" for="message">Message</label>
+    <textarea class="rounded-xl px-4 py-2 w-full  xl:h-48 bg-[#325858cc] text-white text-base resize-none" id="message" name="message"></textarea>
+  </div>
+  <button type="submit" class="justify-self-end col-span-full bg-[#0E2525] text-white px-8 py-4 rounded-2xl mt-5 font-semibold hover:bg-[#1A3A3A] transition">Send</button>
+</form>
 </section>
 
 <script src="/routerHandle.js"></script>
