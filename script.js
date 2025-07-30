@@ -1,10 +1,33 @@
 // Your API credentials
+const OPENAI_API_KEY = "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";
+const weatherapi = "ccb669d687f44649acf183711252907";
 const clientId = 'aC1cqvMId1NMyxALoq4qzaRsFQ4ddU8q';
 const clientSecret = 'hGWzKOQ1xVPwd05S';
 
+/**async function getweather(city)(
+    const res = await fetch('https://api.weatherapi.com/v1/current.json?key=ccb669d687f44649acf183711252907&')
+)
+/**
 /**
  * Retrieve Amadeus OAuth token
  */
+
+// Simple IATA to city mapping (Extend this as needed!)
+const iataToCityMap = {
+  JFK: "New York",
+  LAX: "Los Angeles",
+  ORD: "Chicago",
+  ATL: "Atlanta",
+  CDG: "Paris",
+  NRT: "Tokyo",
+  LHR: "London",
+  SFO: "San Francisco",
+  // Add more IATA-city mappings here
+};
+function getCityFromIata(iataCode) {
+  return iataToCityMap[iataCode] || "Unknown City";
+}
+
 async function getAmadeusToken(clientId, clientSecret) {
   const res = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
     method: 'POST',
@@ -19,9 +42,8 @@ async function getAmadeusToken(clientId, clientSecret) {
   return data.access_token;
 }
 
-/**
- * Fetch Amadeus flight offers with given params
- */
+
+/** Fetch Amadeus flight offers with given params*/
 async function getFlightOffers(token, params) {
   const query = new URLSearchParams(params).toString();
   const url = `https://test.api.amadeus.com/v2/shopping/flight-offers?${query}`;
@@ -33,9 +55,7 @@ async function getFlightOffers(token, params) {
   return res.json();
 }
 
-/**
- * Show results or errors in UI
- */
+/** Show results or errors in UI*/
 function displayResults(data, budget) {
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = '';
@@ -45,7 +65,7 @@ function displayResults(data, budget) {
     return;
   }
 
-  // Filter by budget if specified
+  // Filter by budget
   let offers = data.data;
   if (budget) {
     offers = offers.filter(offer => parseFloat(offer.price.total) <= budget);
@@ -77,52 +97,33 @@ function displayResults(data, budget) {
   });
 }
 
-/**
- * Wire up the form and handle API interaction
- */
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById("search-form");
-  const resultsDiv = document.getElementById('results');
+async function getOpenAICompletion(prompt) {
+  const OPENAI_API_KEY = "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";
 
-  $("#submit").addEventListener('click', async (event) => {
-    event.preventDefault();
-    resultsDiv.textContent = 'Searching...';
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }]
+  };
 
-    // Collect form values
-    const origin = document.getElementById('origin').value.trim().toUpperCase();
-    const destination = document.getElementById('des').value.trim().toUpperCase();
-    const departureDate = document.getElementById('departureDate').value;
-    const people = parseInt(document.getElementById('people').value, 10);
-    const maxResults = parseInt(document.getElementById('maxResults').value, 10) || 5;
-    const budgetInput = document.getElementById('budget').value.trim();
-    const budget = budgetInput ? parseFloat(budgetInput) : null;
-
-    if (!origin || !destination || !departureDate || !people) {
-      resultsDiv.textContent = 'Please fill in all required fields.';
-      return;
-    }
-
-    try {
-      const token = await getAmadeusToken(clientId, clientSecret);
-
-      const params = {
-        originLocationCode: origin,
-        destinationLocationCode: destination,
-        departureDate: departureDate,
-        adults: people,
-        max: maxResults
-      };
-
-      // You could add more params (children, travelClass, etc.) if desired.
-      const data = await getFlightOffers(token, params);
-      displayResults(data, budget);
-
-    } catch (error) {
-      resultsDiv.textContent = 'Error: ' + error.message;
-      console.error(error);
-    }
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify(payload)
   });
-});
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI API error: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+
 
 (function () {
     const pagesData = [];
@@ -233,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (page === "survey") {
             setUpSurveyPage();
         }
+    
         isPopState = true;
         $("title").text(titleCase(page));
     }
@@ -380,12 +382,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await getFlightOffers(token, params);
       displayResults(data, budget);
 
+
+
+      const city = getCityFromIata(destination);
+        const prompt = `I searched for flights from ${origin} to ${destination} (${city}) on ${departureDate} for ${people} people.${budget ? ` The budget is ${budget} USD.` : ''} Please provide a short travel recommendation based on this flight search.`;
+        const aiResponse = await getOpenAICompletion(prompt);
+        let aiDiv = document.getElementById('ai-response');
+        if (!aiDiv) {
+          aiDiv = document.createElement('div');
+          aiDiv.id = 'ai-response';
+          aiDiv.style.marginTop = '20px';
+          aiDiv.style.padding = '10px';
+          aiDiv.style.border = '1px solid #ccc';
+          aiDiv.style.backgroundColor = '#f9f9f9';
+          resultsDiv.parentNode.appendChild(aiDiv);
+        }
+        aiDiv.innerHTML = `<h2>Travel Recommendation</h2><p>${aiResponse}</p>`;
+
     } catch (error) {
       resultsDiv.textContent = 'Error: ' + error.message;
       console.error(error);
     }
   });
 };
+
     
     function packageBuilder(packages) {
         packages.forEach((item) => {
